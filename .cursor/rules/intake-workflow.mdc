@@ -1,13 +1,15 @@
 ---
-description: When a manual test case is pasted or described, normalise it, generate framework code, run, and update docs. Always apply.
+description: When a manual test case is pasted or described, normalise it, generate framework code without executing tests, and update docs. Always apply.
 alwaysApply: true
 ---
 
-# Intake workflow (paste a case → green spec)
+# Intake workflow (paste a case → generated spec; user runs it manually)
 
 Follow this whenever the user pastes or describes a manual test case (any format, even rough). Do not ask where files go. Process several cases **one at a time**.
 
 Read and obey `.cursor/rules/framework-rules.mdc` and `.cursor/rules/manual-testcase-template.mdc`. After generation, apply `.cursor/rules/review-checklist.mdc`.
+
+**Execution boundary:** Generate and review code only. The user always runs Playwright tests manually. Never invoke a test runner, including through npm scripts.
 
 ## Steps (do all of them)
 
@@ -17,9 +19,19 @@ Read and obey `.cursor/rules/framework-rules.mdc` and `.cursor/rules/manual-test
 4. **Verify on the live site** any locator, message text, URL path, or endpoint you do not already have in the repo. Use Playwright codegen, the browser tool, or a documented API call. **Never invent.**
 5. **Close gaps** in pages, API clients, fixtures, data factories, and utils. Follow framework-rules. Do not put selectors or URLs in specs.
 6. **Write the spec.** Import `test, expect` from `src/fixtures`. Title: `'Type | Description | TC-NNN'`. Tags via `{ tag: [...] }`. `test.step` per manual step group. `expect` per expected result. At least two meaningful assertions.
-7. **Run, then quality gates.** `npx playwright test <spec> --project=chromium --repeat-each=3`. Fix root causes; never weaken assertions. Then `npm run lint` and `npm run typecheck`. If flaky after honest investigation, `test.fixme` with a reason — do not hide it.
-8. **Update docs.** Case file: `Automated: Yes`, `Spec:` path. Traceability row in `docs/manual-test-cases/README.md`. Append mistakes and fixes to `docs/ai-review-log.md`.
-9. **Reply** with a short summary: files created/changed, assumptions, test results (`n` passed / `n` failed, repeat-each=3).
+7. **Static quality checks only; do not execute tests.** Never run `npx playwright test`, `npm test`, `npm run test`, or any command/script that starts the Playwright test runner. Do not run the generated spec, the full suite, retries, or `--repeat-each`. You may run `npm run lint` and `npm run typecheck` only if you have confirmed those scripts perform static checks and do not trigger tests. Report checks that were not run as `Not run`—never imply they passed.
+8. **Update docs.** Case file: `Automated: Yes` when the spec has been generated, `Spec:` path, and keep `Status: Ready` pending the user's manual execution. Add/update the traceability row in `docs/manual-test-cases/README.md`. Append mistakes and fixes to `docs/ai-review-log.md`. Change status to `Automated` only after the user confirms a successful manual run.
+9. **Reply** with a short summary: files created/changed, assumptions, static-check results, and the exact command the user can run manually. Explicitly state: `Playwright tests were not executed by the AI; awaiting your manual run.` Do not report pass/fail counts unless the user supplied actual execution results.
+
+## Manual execution handoff
+
+After code generation, provide the exact command for the user, for example:
+
+```bash
+npx playwright test tests/ui/tc-NNN-example.spec.ts --project=chromium
+```
+
+The command is guidance only; do not execute it. The user owns all test execution and result confirmation. Until confirmation, leave the case `Ready` and describe the automation as generated but not yet execution-verified.
 
 ## Out of scope
 

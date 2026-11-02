@@ -14,9 +14,8 @@ const workers: number | string = process.env.WORKERS
     : '50%';
 
 /**
- * Browser projects ignore API-only specs. The `api` project is request-only:
- * Playwright still requires a browserName internally, but those specs must
- * use `request` (never `page`) so no UI session is exercised.
+ * Browser projects skip tests/api. The `api` project runs only tests/api specs,
+ * which must use `request` (never `page`), so no browser is launched.
  */
 export default defineConfig({
   testDir: './tests',
@@ -27,24 +26,24 @@ export default defineConfig({
   timeout: env.timeout,
   expect: { timeout: 10_000 },
   reporter: isCI
-    ? [
-        ['list'],
-        ['github'],
-        ['html', { open: 'never', outputFolder: 'playwright-report' }],
-        ['allure-playwright', { detail: true, suiteTitle: true, resultsDir: 'allure-results' }],
-      ]
-    : [
-        ['list'],
-        ['html', { open: 'never', outputFolder: 'playwright-report' }],
-        ['allure-playwright', { detail: true, suiteTitle: true, resultsDir: 'allure-results' }],
-      ],
+  ? [
+      ['list'],
+      ['github'],
+      ['html', { open: 'never', outputFolder: 'playwright-report' }],
+      ['allure-playwright', { resultsDir: 'allure-results' }],
+    ]
+  : [
+      ['list'],
+      ['html', { open: 'never', outputFolder: 'playwright-report' }],
+      ['allure-playwright', { resultsDir: 'allure-results' }],
+    ],
   use: {
     baseURL: env.baseURL,
     extraHTTPHeaders: {
       Accept: 'application/json, text/html;q=0.9',
     },
     testIdAttribute: 'data-qa',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 15_000,
@@ -78,7 +77,7 @@ export default defineConfig({
         browserName: 'chromium',
         screenshot: 'off',
         video: 'off',
-        trace: 'on-first-retry',
+        trace: 'retain-on-failure',
       },
     },
   ],

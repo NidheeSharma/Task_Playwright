@@ -49,9 +49,16 @@ Save as `docs/manual-test-cases/TC-NNN-<kebab-title>.md`. Copy the block below. 
 
 ## Field rules
 
-- **Status:** Draft → Ready → Automated (after green run) or Blocked.
+- **Status:** Draft → Ready → Automated (only after the user confirms a successful manual run) or Blocked. AI-generated code alone does not make the case `Automated`.
 - **Type:** UI = browser only; API = `/api` only; Hybrid = both in one TC.
 - **Tags:** must match spec `{ tag: [...] }`.
-- **Automated / Spec:** set together when the spec exists (`tests/<type>/tc-NNN-<kebab>.spec.ts`).
+- **Automated / Spec:** set `Automated: Yes` and populate `Spec` when the automation spec has been generated. Keep `Status: Ready` until the user confirms a successful manual run; then the user-confirmed result may move the status to `Automated`.
 - **Steps** and **Expected results** are 1:1 numbered. Each expected result becomes an `expect` (or a tight group of expects) inside a `test.step`.
 - **Cleanup:** API delete in fixture teardown, not a manual “log out and hope”.
+
+
+## Execution ownership
+
+- The AI generates the test and provides a manual execution command; it does not run the test.
+- Record execution outcome only from results supplied or confirmed by the user.
+- Until the user confirms a successful manual run, keep `Status: Ready` even when `Automated: Yes` and a spec path are present.

@@ -18,7 +18,7 @@ IDs are stable. Cite them in review notes when you break or stretch a rule.
 
 - **MT1** File: `docs/manual-test-cases/TC-NNN-<kebab-title>.md`.
 - **MT2** Required fields: Status, Type, Priority, Tags, Automated, Spec, Preconditions, Test data, Steps, Expected results, Cleanup, Automation notes.
-- **MT3** Status: Draft | Ready | Automated | Blocked. After a green run: Automated.
+- **MT3** Status: Draft | Ready | Automated | Blocked. Use `Ready` when automation code has been generated but has not been manually confirmed. Set `Automated` only after the user confirms a successful manual run. Never infer a passing result.
 - **MT4** Traceability table in `docs/manual-test-cases/README.md` must stay in sync.
 
 ## N — Naming and tags
@@ -123,14 +123,23 @@ test.describe('Hybrid | Search product vs API | TC-003', () => {
 });
 ```
 
-## Definition of Done
+## Definition of Done (AI generation only)
 
 - [ ] Manual case file + README row + spec path
 - [ ] Gaps filled in POM/API/fixtures/data; live-verified locators
 - [ ] Spec: fixtures import, tags, TC annotation, steps, 2+ assertions
-- [ ] `--repeat-each=3` on chromium green (or `fixme` with reason)
-- [ ] lint + typecheck clean
+- [ ] Review checklist completed; unresolved items and assumptions reported
+- [ ] `Automated: Yes` means the automation spec has been generated; keep `Status: Ready` until the user confirms a successful manual run
 - [ ] `ai-review-log.md` updated if the agent guessed wrong
+
+## Test execution policy
+
+- The user runs all Playwright tests manually.
+- The AI must never execute tests or commands that start the Playwright test runner, including `npx playwright test`, `npm test`, `npm run test`, or equivalent scripts.
+- Do not run a test to verify, debug, retry, or establish a passing status.
+- Do not claim tests passed, failed, or are green unless the user reports the result.
+- The AI may provide the exact manual execution command for the generated spec.
+- Static-only linting or typechecking may be run only if the relevant package scripts have been inspected and confirmed not to launch tests. Otherwise, provide the commands for the user to run manually.
 
 ## Anti-patterns
 

@@ -1,11 +1,11 @@
 ---
-description: Human/agent review checklist after generating a test from a manual case. Use after intake-workflow generation.
+description: Human/agent review checklist after generating a test from a manual case. Review generated code without executing Playwright tests.
 alwaysApply: false
 ---
 
-# Review checklist (after generation)
+# Review checklist (after generation; no test execution)
 
-Run this before telling the user the case is done. Fix failures; do not tick a box that is not true.
+Apply this before reporting that code generation is complete. Fix code/documentation issues; do not tick a box that is not true. The AI must not execute Playwright tests. The user runs them manually.
 
 ## Case and traceability
 
@@ -27,10 +27,16 @@ Run this before telling the user the case is done. Fix failures; do not tick a b
 - [ ] `test.step` per manual step group; 2+ meaningful assertions
 - [ ] Parallel-safe unique data; API user deleted in teardown that cannot throw
 
-## Execution
+## Static validation (no test execution)
 
-- [ ] `npx playwright test <spec> --project=chromium --repeat-each=3` passed
-- [ ] Failures fixed at root cause (assertions not weakened)
-- [ ] `npm run lint` and `npm run typecheck` passed
-- [ ] Flakes quarantined with `test.fixme` + reason, or not present
+- [ ] No Playwright test command or npm test script was executed by the AI
+- [ ] `npm run lint` and `npm run typecheck` were run only if confirmed to be static-only; otherwise marked `Not run`
+- [ ] Static-check failures, if any, are reported accurately; assertions are not weakened to silence issues
 - [ ] Agent mistakes appended to `docs/ai-review-log.md`
+
+## Manual execution handoff (user-owned)
+
+- [ ] Exact command for the user to execute the generated spec is provided
+- [ ] State clearly that the AI did not execute the test and no pass/fail result is claimed
+- [ ] Case remains `Status: Ready` until the user confirms a successful manual run
+- [ ] Update status to `Automated` only after user confirmation

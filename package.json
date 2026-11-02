@@ -8,20 +8,25 @@
   "engines": {
     "node": ">=18"
   },
-  "scripts": {
-    "test": "playwright test",
-    "test:smoke": "playwright test --grep @smoke",
-    "test:regression": "playwright test --grep @regression",
-    "test:ui": "playwright test tests/ui",
-    "test:api": "playwright test --project=api",
-    "test:hybrid": "playwright test tests/hybrid",
-    "report": "playwright show-report",
-    "allure:serve": "npx allure serve allure-results",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
-  },
+  
+"scripts": {
+  "test": "tsx run-tests.ts",
+  "test:smoke": "tsx run-tests.ts --grep @smoke",
+  "test:regression": "tsx run-tests.ts --grep @regression",
+  "test:ui": "tsx run-tests.ts tests/ui",
+  "test:api": "tsx run-tests.ts --project=api",
+  "test:hybrid": "tsx run-tests.ts tests/hybrid",
+
+  "report": "playwright show-report",
+  "allure:generate": "allure generate allure-results --clean -o allure-report",
+  "allure:open": "allure open allure-report",
+  "allure:serve": "allure serve allure-results",
+
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix",
+  "format": "prettier --write .",
+  "typecheck": "tsc --noEmit"
+},
   "keywords": [
     "playwright",
     "typescript",
@@ -35,12 +40,14 @@
     "@types/node": "^26.6.6",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
+    "allure-commandline": "^2.46.1",
     "allure-playwright": "^3.14.0",
     "dotenv": "^18.0.9",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.7",
     "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
     "typescript": "~5.9.3"
   }
 }

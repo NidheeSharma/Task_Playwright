@@ -5,11 +5,11 @@ description: Human/agent review checklist after generating a test from a manual 
 
 # Review checklist (after generation)
 
-Run this before telling the user the case is done. Fix failures; do not tick a box that is not true.
+Complete this static review before handing the generated code to the user. Fix issues you can resolve without executing tests; do not tick a box that is not true.
 
 ## Case and traceability
 
-- [ ] `docs/manual-test-cases/TC-NNN-*.md` exists, Status/Automated/Spec are correct
+- [ ] `docs/manual-test-cases/TC-NNN-*.md` exists; `Automated: Yes` means the spec was generated, and `Status: Ready` remains until the user confirms a successful manual run
 - [ ] README traceability row added
 - [ ] Title, tags, and TC id match the spec
 
@@ -27,10 +27,19 @@ Run this before telling the user the case is done. Fix failures; do not tick a b
 - [ ] `test.step` per manual step group; 2+ meaningful assertions
 - [ ] Parallel-safe unique data; API user deleted in teardown that cannot throw
 
-## Execution
+## Static review and handoff
 
-- [ ] `npx playwright test <spec> --project=chromium --repeat-each=3` passed
-- [ ] Failures fixed at root cause (assertions not weakened)
-- [ ] `npm run lint` and `npm run typecheck` passed
-- [ ] Flakes quarantined with `test.fixme` + reason, or not present
+- [ ] Review the generated code against the framework rules; fix issues that can be identified without running tests
+- [ ] Check that assertions reflect the expected results and have not been weakened
+- [ ] Check that no unsupported `test.fixme` was added to hide an unverified failure
+- [ ] Inspect package scripts before considering lint/typecheck; run them only if confirmed to be static-only and not to launch tests. Otherwise, give the user the commands to run
 - [ ] Agent mistakes appended to `docs/ai-review-log.md`
+- [ ] Exact manual test command provided to the user
+- [ ] Clearly state that tests have not been executed by the AI
+
+## Manual execution policy
+
+- The user executes all tests manually.
+- Never run `npx playwright test`, `npm test`, `npm run test`, or any equivalent command that launches the Playwright test runner.
+- Do not retry, rerun, or claim a test passed/failed/green unless the user shares the result.
+- After the user confirms a successful manual run, the case status may be changed from `Ready` to `Automated`.

@@ -19,7 +19,8 @@ IDs are stable. Cite them in review notes when you break or stretch a rule.
 
 - **MT1** File: `docs/manual-test-cases/TC-NNN-<kebab-title>.md`.
 - **MT2** Required fields: Status, Type, Priority, Tags, Automated, Spec, Preconditions, Test data, Steps, Expected results, Cleanup, Automation notes.
-- **MT3** Status: Draft | Ready | Automated | Blocked. After a green run: Automated.
+- **MT3** Status: Draft | Ready | Automated | Blocked. Keep `Ready` after code generation; change to `Automated` only after the user confirms a successful manual test run.
+- **MT5** AI must not execute Playwright tests. The user owns test execution and confirms the result.
 - **MT4** Traceability table in `docs/manual-test-cases/README.md` must stay in sync.
 
 ## N — Naming and tags
@@ -124,13 +125,24 @@ test.describe('Hybrid | Search product vs API | TC-003', () => {
 });
 ```
 
-## Definition of Done
+## Test execution policy
+
+- The AI must generate and review automation code, but must **never execute Playwright tests**.
+- Never run `npx playwright test`, `npm test`, `npm run test`, or any script/command that starts the Playwright test runner.
+- Do not run generated specs, the full suite, retries, or `--repeat-each` on the user's behalf.
+- The AI may run static checks such as lint and TypeScript type-checking only when the scripts are confirmed not to execute tests.
+- Provide the exact manual execution command for the generated spec and clearly state that it has not been executed by the AI.
+- Do not report a test as passed or set its case status to `Automated` until the user confirms a successful manual run.
+- If the user later shares execution results, help diagnose them and update status/documentation only according to the confirmed result.
+
+## Definition of Done (AI generation)
 
 - [ ] Manual case file + README row + spec path
 - [ ] Gaps filled in POM/API/fixtures/data; live-verified locators
 - [ ] Spec: fixtures import, tags, TC annotation, steps, 2+ assertions
-- [ ] `--repeat-each=3` on chromium green (or `fixme` with reason)
-- [ ] lint + typecheck clean
+- [ ] Static lint + typecheck clean, if available and safe to run without executing tests
+- [ ] Exact manual execution command provided to the user
+- [ ] Case remains `Ready` pending the user's successful manual execution confirmation
 - [ ] `ai-review-log.md` updated if the agent guessed wrong
 
 ## Anti-patterns
@@ -145,3 +157,8 @@ test.describe('Hybrid | Search product vs API | TC-003', () => {
 | Shared static user | Faker + API create/delete |
 | `page.goto(full url)` | `BasePage.goto(relative)` |
 | Throw in fixture teardown | Log, swallow, still attempt delete |
+
+
+## Manual execution ownership
+
+Generating a spec is not the same as executing or passing it. The user runs all Playwright tests manually. The AI may explain or provide commands, but must not invoke a test runner or claim execution results it has not observed from the user.
