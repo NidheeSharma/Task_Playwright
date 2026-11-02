@@ -1,291 +1,299 @@
-AutomationExercise Playwright Framework
 
-An enterprise-style end-to-end test automation framework for AutomationExercise, built with Playwright and TypeScript. It covers UI, REST API, and hybrid testing, with AI-assisted test generation using Cursor and Claude Code skill files.
+# AutomationExercise Playwright Framework
 
-Contents
-Overview
-Tech Stack and Dependencies
-Setup
-Folder Structure
-How It Works (Code Flow)
-Key Components
-Test Coverage
-Running Tests
-Reports and Debugging
-Adding a New Test with AI
-Design Decisions
-Known Limitations
-1. Overview
+A Playwright + TypeScript automation framework covering **UI, API, and Hybrid Testing**, with AI-assisted test generation using Cursor and Claude Code.
 
-The target is a public practice e-commerce website with registration, login, products, search, cart, checkout, and a documented REST API.
+[![Playwright](https://img.shields.io/badge/Playwright-Automation-2EAD33?logo=playwright)](https://playwright.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?logo=typescript)]
 
-The framework supports:
+**Application Under Test:** [AutomationExercise](https://www.automationexercise.com/)
 
-UI Testing: Browser workflows using the Page Object Model.
-API Testing: Endpoint validation with typed responses and schema checks.
-Hybrid Testing: Combining API and UI operations to validate complete workflows.
+---
 
-Key features: Reusable fixtures, unique test data, centralized locators and API endpoints, parallel execution, test tagging, and detailed reporting.
+## 1. Project Overview
 
-2. Tech Stack and Dependencies
-Package	Purpose
-@playwright/test	Test runner, browser automation, API testing
-typescript	Strict typing
-@faker-js/faker	Unique test data
-dotenv	Environment variables
-eslint, prettier	Code quality and formatting
-@types/node	Node.js typings
+This project implements a reusable test automation framework using Playwright and TypeScript.
 
-Requirement: Node.js 18 or newer.
+### Testing Coverage
 
-3. Setup
+- **UI Testing:** Validates end-to-end browser workflows.
+- **API Testing:** Validates REST API endpoints and responses.
+- **Hybrid Testing:** Combines API and UI operations to validate business workflows.
 
-Clone the repository and install dependencies:
+### Key Features
 
-bash
-git clone <your-repo-url>
-cd Task_Playwright
+- Page Object Model (POM)
+- Custom Playwright fixtures
+- Centralized API client with typed responses
+- Reusable test data factory using Faker
+- Multi-environment configuration
+- Multi-browser project configuration
+- Parallel test execution
+- HTML reporting with failure evidence
+- AI-assisted test generation
 
-npm install
-npx playwright install
-cp .env.example .env
-npx tsc --noEmit
+## 2. Tech Stack
 
+| Technology | Purpose |
+|---|---|
+| Playwright | Browser automation and test execution |
+| TypeScript | Strong typing and maintainability |
+| Node.js | Runtime environment |
+| Faker.js | Dynamic test data generation |
+| REST API | Backend testing |
+| ESLint / Prettier | Code quality and formatting |
+| Cursor / Claude Code | AI-assisted test generation |
 
-For Windows PowerShell:
+## 3. Framework Architecture
 
-powershell
-Copy-Item .env.example .env
+The framework follows a layered architecture to separate test logic, browser interactions, API operations, and test data.
 
+### Code Flow
 
-The framework supports three environments:
+```text
+             Manual Test Cases
+                    |
+                    v
+             Playwright Specs
+                    |
+                    v
+             Custom Fixtures
+                    |
+             +------+------+
+             |             |
+             v             v
+         Page Objects   API Classes
+             |             |
+             v             v
+          Browser      API Client
+             |             |
+             +------+------+
+                    |
+                    v
+                Assertions
+                    |
+                    v
+             Fixture Teardown
+```
 
-dev
-qa (default)
-prod
+### Folder Structure
 
-Environment configurations are maintained in the config/ directory.
-
-4. Folder Structure
-text
-.
-├── .claude/skills/          # AI skill files (Claude Code)
-├── .cursor/rules/           # AI rules (Cursor)
+```text
+Task_Playwright/
+│
 ├── config/                  # Environment configurations
 ├── docs/
 │   ├── manual-test-cases/   # Manual cases and traceability
 │   └── ai-review-log.md     # AI review observations
+│
 ├── src/
 │   ├── api/                 # API client and endpoint classes
-│   ├── data/                # Test data factory and constants
+│   ├── data/                # Test data factories and constants
 │   ├── fixtures/            # Custom Playwright fixtures
 │   ├── pages/               # Page Object Model classes
-│   └── utils/               # Helpers, logger, validators
+│   └── utils/               # Helpers, logger and validators
+│
 ├── tests/
 │   ├── api/                 # API test specifications
-│   ├── hybrid/              # UI + API test specifications
+│   ├── hybrid/              # Combined UI and API tests
 │   └── ui/                  # UI test specifications
+│
+├── .claude/                 # Claude Code skills
+├── .cursor/                 # Cursor rules
+│
 ├── playwright.config.ts     # Playwright configuration
 ├── tsconfig.json            # TypeScript configuration
-├── CLAUDE.md                # Claude Code instructions
-└── package.json
+├── package.json             # Dependencies and scripts
+└── README.md                # Project documentation
+```
 
-5. How It Works (Code Flow)
+## 4. Test Coverage
 
-The framework follows a layered architecture using Page Objects, custom fixtures, and a centralized API client.
+The framework automates **8 manual test cases as 12 Playwright tests**.
 
-text
-Manual Test Case
-       |
-       v
-Playwright Test Spec
-       |
-       v
-Custom Fixtures
-       |
-       +----------------------+
-       |                      |
-       v                      v
-   Page Objects           API Classes
-       |                      |
-       v                      v
-    Browser               API Client
-       |                      |
-       +----------+-----------+
-                  |
-                  v
-              Assertions
-                  |
-                  v
-           Fixture Teardown
+| Test ID | Scenario | Type |
+|---|---|---|
+| TC-001 | User registration and API verification | Hybrid |
+| TC-002 | Valid/invalid login and logout | Hybrid |
+| TC-003 | Product search and API comparison | Hybrid |
+| TC-004 | Cart operations and price validation | UI |
+| TC-005 | Checkout and order confirmation | Hybrid |
+| TC-006 | Products API validation | API |
+| TC-007 | Brands API validation | API |
+| TC-008 | User API and account lifecycle | API |
 
+Detailed test steps and expected results are available in `docs/manual-test-cases/`.
 
-A typical hybrid test uses the API to create a user account, verifies login through the UI, and deletes the account during fixture teardown.
+## 5. Installation and Setup
 
-6. Key Components
-Page Objects: Maintain UI locators and browser interactions. Locators are centralized instead of being written in test specifications.
-ApiClient: Handles HTTP requests, response parsing, and common API operations.
-UserApi / ProductApi: Provide typed methods for individual API endpoints.
-Fixtures: Manage browser setup, Page Objects, API dependencies, and account cleanup.
-Data Factory: Uses buildUser(), buildPayment(), and uniqueEmail() to generate unique test data.
-Utilities: Provide parsePrice(), normalizeText(), validateShape(), and a logger that redacts sensitive information.
+### Prerequisites
 
-API handling: The application sometimes returns HTTP 200 while providing the actual operation status in responseCode. Therefore, tests validate both values. Read-only API requests support safe retries for temporary server errors.
+- Node.js 18 or newer
+- npm
+- Git
 
-Test tags: @smoke, @regression, @ui, @api, @hybrid, and @negative.
+### Clone Repository
 
-7. Test Coverage
+```bash
+git clone https://github.com/NidheeSharma/Task_Playwright.git
+cd Task_Playwright
+```
 
-The framework contains 8 manual test cases automated as 12 Playwright tests.
+### Install Dependencies
 
-ID	Flow	Type	Specification
-TC-001	Registration and API verification	Hybrid	tests/hybrid/register-verify.spec.ts
-TC-002	Valid/invalid login and logout	Hybrid	tests/hybrid/login.spec.ts
-TC-003	Product search and API comparison	Hybrid	tests/hybrid/search-vs-api.spec.ts
-TC-004	Cart price, quantity, total, and removal	UI	tests/ui/cart.spec.ts
-TC-005	Checkout and order confirmation	Hybrid	tests/hybrid/checkout.spec.ts
-TC-006	Products API and negative scenarios	API	tests/api/products.api.spec.ts
-TC-007	Brands API validation	API	tests/api/products.api.spec.ts
-TC-008	Account lifecycle and login verification	API	tests/api/users.api.spec.ts
+```bash
+npm install
+npx playwright install
+```
 
-Detailed test steps and expected results are maintained in docs/manual-test-cases/.
+### Configure Environment
 
-8. Running Tests
+The framework supports:
 
-Run all Chromium tests:
+- `dev`
+- `qa` (default)
+- `prod`
 
-bash
+Configure the required environment variables in your local `.env` file.
+
+### Validate TypeScript
+
+```bash
+npx tsc --noEmit
+```
+
+## 6. Running Tests
+
+### Run All Chromium Tests
+
+```bash
 npx playwright test --project=chromium
+```
 
+### Run API Tests
 
-Run API tests (if an api project is configured):
-
-bash
+```bash
 npx playwright test tests/api --project=api
+```
 
+### Run Smoke Tests
 
-Run smoke tests:
+```bash
+npx playwright test --grep "@smoke"
+```
 
-bash
-npx playwright test --grep "@smoke" --project=chromium
+### Run a Specific Test Case
 
-
-Exclude negative tests:
-
-bash
-npx playwright test --grep-invert "@negative"
-
-
-Run a specific test case:
-
-bash
+```bash
 npx playwright test -g "TC-004"
+```
 
+### Run in Headed Mode
 
-Run in headed mode:
+```bash
+npx playwright test --headed
+```
 
-bash
-npx playwright test tests/hybrid/login.spec.ts --headed
+### Run Playwright UI Mode
 
-
-Open Playwright UI mode:
-
-bash
+```bash
 npx playwright test --ui
+```
 
+### Run in Debug Mode
 
-Run in debug mode:
-
-bash
+```bash
 npx playwright test --debug
+```
 
+### Repeat Tests
 
-Run repeated tests for stability checking:
-
-bash
+```bash
 npx playwright test --repeat-each=3
+```
 
-
-Choose an environment:
-
-macOS/Linux:
-
-bash
-ENV=qa npx playwright test
-
-
-Windows PowerShell:
-
-powershell
-$env:ENV="qa"
-npx playwright test
-
-9. Reports and Debugging
+## 7. Reporting and Debugging
 
 The framework uses the Playwright HTML reporter.
 
-Open the HTML report:
+Open the report:
 
-bash
+```bash
 npx playwright show-report
+```
 
+Failure evidence includes:
 
-Open a test trace:
+- Screenshots
+- Videos
+- Execution traces
 
-bash
+View a trace:
+
+```bash
 npx playwright show-trace test-results/<test-folder>/trace.zip
+```
 
+Sensitive information is redacted from API logs.
 
-On failure, screenshots, videos, and traces are retained according to the Playwright configuration. API logs redact sensitive information.
+## 8. AI-Assisted Test Generation
 
-10. Adding a New Test with AI
+The framework integrates Cursor and Claude Code through skill and rule files.
 
-The repository contains skill and rule files for Cursor and Claude Code. These define framework conventions and guide AI agents in generating tests from manual steps.
+A single `@generate` request with manual test steps guides the AI agent to:
 
-Example request:
+1. Create a manual test case.
+2. Identify required Page Objects or API methods.
+3. Generate the Playwright specification.
+4. Follow existing framework conventions.
+5. Run validation and update documentation.
 
-text
+### Example Request
+
+```text
 @generate
 
-Search a product and add it to the cart.
+Search for a product and add it to the cart.
 
 1. Open the products page.
 2. Search for "top".
-3. Verify only products containing "top" are shown.
-4. Add the first result to the cart.
+3. Verify matching products are displayed.
+4. Add the first product to the cart.
 5. Verify the cart contains one item.
-
-
-The AI agent follows the framework rules to generate:
-
-Manual test case documentation.
-Required Page Object, API, or data changes.
-Playwright test specification.
-Related documentation updates.
+```
 
 Generated code is reviewed and validated before acceptance.
 
-AI skill files:
+### AI Configuration
 
-.claude/skills/add-test-case.md – Test generation workflow.
-.claude/skills/automationexercise-framework-rules.md – Framework coding rules.
-.cursor/rules/add-test-case.mdc – Cursor generation trigger.
-CLAUDE.md – Claude Code project instructions.
+| File | Purpose |
+|---|---|
+| `.claude/skills/add-test-case.md` | Test generation workflow |
+| `.claude/skills/automationexercise-framework-rules.md` | Framework coding standards |
+| `.cursor/rules/add-test-case.mdc` | Cursor generation trigger |
+| `CLAUDE.md` | Claude Code project instructions |
 
-AI review observations are maintained in docs/ai-review-log.md.
+## 9. Design Principles
 
-11. Design Decisions
-Manual cases as the source of truth: Each automated specification maps to a documented test case.
-Separation of concerns: UI locators, API endpoints, test data, and test logic are maintained separately.
-Hybrid testing: API operations prepare or verify data while UI tests validate user-facing behaviour.
-Safe cleanup: Accounts created through API fixtures are deleted during teardown.
-Controlled retries: Create and delete requests are never retried.
-Parallel-safe execution: Unique test data and reduced worker count help avoid conflicts.
-Explicit synchronization: Playwright waits and assertions are preferred over fixed sleeps.
-12. Known Limitations
-AutomationExercise is a shared public practice website and may occasionally respond slowly or return HTTP 503.
-Chromium is the primary stable browser baseline. Firefox and WebKit projects are configured but require additional stability validation.
-Ads and unnecessary third-party resources are blocked during test execution.
-Allure reporting and GitHub Actions integration are optional future enhancements.
+- Separation of UI, API, data, and test logic.
+- Reusable Page Objects and fixtures.
+- Unique test data for independent execution.
+- API-based test data setup and cleanup.
+- Explicit waits instead of fixed sleeps.
+- Safe retries for read-only API requests.
+- Manual test cases maintained as the source of truth.
 
-Project Goal: Provide a reusable Playwright automation framework that combines UI, API, hybrid testing, and AI-assisted test generation.
+## 10. Known Limitations
+
+- AutomationExercise is a shared public practice website and may occasionally respond slowly or return HTTP 503.
+- Chromium is the primary stable browser baseline.
+- Firefox and WebKit require additional stability validation.
+- Allure reporting and GitHub Actions integration are optional future enhancements.
+
+---
+
+## Project Objective
+
+To build a maintainable Playwright automation framework combining UI, API, hybrid testing, and AI-assisted test generation.
+
+**Author:** [Nidhee Sharma](https://github.com/NidheeSharma)
