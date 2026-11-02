@@ -1,0 +1,146 @@
+---
+name: framework-rules
+description: Enterprise Playwright conventions for this repo (layout, POM, API, hybrid, fixtures, data, tags). Use when adding or changing tests or src/.
+---
+
+# Framework rules
+
+IDs are stable. Cite them in review notes when you break or stretch a rule.
+
+## R — Repo layout
+
+- **R1** Specs only under `tests/ui/`, `tests/api/`, `tests/hybrid/`. One TC per spec: `tc-NNN-<kebab>.spec.ts`.
+- **R2** Pages in `src/pages/` (plus `components/`). API in `src/api/`. Fixtures in `src/fixtures/index.ts`. Data in `src/data/`. Utils in `src/utils/`.
+- **R3** Env config in `config/env.<ENV>.ts`; select with `ENV` (default `qa`). No hardcoded base URLs in tests or pages (use `baseURL` / `env`).
+- **R4** Manual cases in `docs/manual-test-cases/`. AI mistakes in `docs/ai-review-log.md`.
+
+## MT — Manual cases
+
+- **MT1** File: `docs/manual-test-cases/TC-NNN-<kebab-title>.md`.
+- **MT2** Required fields: Status, Type, Priority, Tags, Automated, Spec, Preconditions, Test data, Steps, Expected results, Cleanup, Automation notes.
+- **MT3** Status: Draft | Ready | Automated | Blocked. After a green run: Automated.
+- **MT4** Traceability table in `docs/manual-test-cases/README.md` must stay in sync.
+
+## N — Naming and tags
+
+- **N1** Test title: `'Type | Description | TC-NNN'` where Type is `UI`, `API`, or `Hybrid`.
+- **N2** Tags via `test(..., { tag: ['@smoke', '@regression', ...] })`. Allowed: `@smoke` `@regression` `@ui` `@api` `@hybrid` `@negative`.
+- **N3** Always include `@regression` plus the type tag. Add `@smoke` only for the critical path. Add `@negative` for failure paths.
+- **N4** Annotate: `test.info().annotations.push({ type: 'TC', description: 'TC-NNN' })` (or fixture helper if present).
+- **N5** Page class: `PascalCase` + `Page` (`LoginPage`). Methods: verbs (`submitLogin`, `expectLoggedInAs`). Locators: `readonly` camelCase.
+
+## UI — UI tests
+
+- **UI1** Import `test, expect` from `src/fixtures` only. Never from `@playwright/test` in specs.
+- **UI2** No selectors, CSS, XPath, or absolute URLs in specs. Call page methods.
+- **UI3** No `waitForTimeout`. Use web-first assertions (`toBeVisible`, `toHaveText`, `toHaveURL`, …).
+- **UI4** At least **two meaningful assertions** per test (content, counts, values — not “page opened”).
+- **UI5** Wrap each manual step group in `await test.step('…', async () => { … })`.
+- **UI6** Tests must be independent and parallel-safe.
+
+## API — API tests
+
+- **API1** Use `UserApi` / `ProductApi` (via `api` fixture). Do not call `request` ad hoc in specs except through those clients.
+- **API2** Assert **both** HTTP status (`httpStatus`) and body `responseCode`. This site often returns HTTP 200 with the real code in the body.
+- **API3** Parse body as JSON even when Content-Type is `text/html`. Clients already do this; do not re-parse in specs.
+- **API4** Typed responses only. No `any`. Schema-check list payloads with utils.
+- **API5** At least one **negative** case per endpoint covered in this repo (missing param, invalid method, wrong credentials, …).
+- **API6** Requests are `application/x-www-form-urlencoded` unless the live API shows otherwise.
+
+## HY — Hybrid
+
+- **HY1** At least one UI assertion **and** one API assertion in the same test (or tightly coupled tests in the same spec that share the TC).
+- **HY2** Prefer API for setup and teardown (create/delete account). UI for the behaviour under test, or the reverse when the TC says so.
+- **HY3** Fail fast: if API setup fails, do not continue UI steps.
+- **HY4** Tag `@hybrid` plus `@ui`/`@api` as appropriate, always `@regression`.
+
+## PO — Page objects
+
+- **PO1** Every page extends `BasePage`. Constructor takes `Page`.
+- **PO2** Locators are `readonly` fields initialized in the constructor or as class fields. No locator strings leaked to tests.
+- **PO3** Preference: `getByRole` > `getByLabel` / `getByText` > `getByTestId` (`data-qa`) > CSS. Use CSS only when the site has no better hook.
+- **PO4** Actions return `this` or void; assertions that are reused can live as `expect*` methods on the page.
+- **PO5** `dismissAds()` from `BasePage` before click-heavy flows. Header actions (logout, logged-in name) live on `BasePage` or `HeaderComponent`.
+- **PO6** No `page.goto('https://…')`. Use `this.goto(path)` with a relative path.
+
+## FX — Fixtures
+
+- **FX1** Export `test, expect` from `src/fixtures/index.ts` (extend Playwright’s test).
+- **FX2** `pages`: constructed page objects for the test.
+- **FX3** `api`: `{ user: UserApi; product: ProductApi }` (or equivalent typed bag).
+- **FX4** `registeredUser`: create via API; **always delete in teardown**; teardown must **never throw** (log and swallow). Unique email per test via faker.
+- **FX5** `authenticatedPage`: storageState (or equivalent) from API/UI login, scoped so workers do not share a single mutating account.
+- **FX6** Do not share mutable cart/account state across tests.
+
+## TD — Test data
+
+- **TD1** Build users/addresses/payments with `src/data/factory.ts`. Overrides allowed: `createUser({ email })`.
+- **TD2** No hardcoded credentials in specs. No real personal data.
+- **TD3** Constants (routes, messages, product names that are site fixtures) live in `src/data/constants.ts` **after** live-site verification.
+- **TD4** JSON fixtures only for stable catalogue samples, not for unique accounts.
+
+## CFG — Config
+
+- **CFG1** `ENV=qa|dev|prod`. Timeouts and URLs come from `config/`.
+- **CFG2** Projects: `chromium`, `firefox`, `webkit` (skip `tests/api`), `api` (only `tests/api`).
+- **CFG3** `testIdAttribute: 'data-qa'`.
+
+## RP — Reporting
+
+- **RP1** HTML + Allure + list (GitHub on CI).
+- **RP2** Screenshot and video on failure; trace on first retry.
+- **RP3** On API failure, attach redacted request/response via logger/fixtures. Never attach passwords.
+
+## SITE — automationexercise.com quirks
+
+- **SITE1** Base URL `https://www.automationexercise.com`, API prefix `/api`.
+- **SITE2** Body `responseCode` is the real status (200/201/400/404/405) even when HTTP is 200.
+- **SITE3** Ads/vignettes intercept clicks — `dismissAds()` before interacting.
+- **SITE4** Prices look like `Rs. 500`. Parse with `parsePrice`. Cart path `/view_cart`.
+- **SITE5** Confirm locators and copy on the live site. Known `data-qa` includes: `login-email`, `login-password`, `login-button`, `signup-name`, `signup-email`, `signup-button`, `create-account`, `account-created`, `continue-button`, `name-on-card`, `card-number`, `cvc`, `expiry-month`, `expiry-year`, `pay-button`, `order-placed`.
+
+## Spec template
+
+```ts
+import { test, expect } from '../../src/fixtures';
+
+test.describe('Hybrid | Search product vs API | TC-003', () => {
+  test('Hybrid | Search product vs API | TC-003', {
+    tag: ['@regression', '@hybrid', '@smoke'],
+  }, async ({ pages, api }) => {
+    test.info().annotations.push({ type: 'TC', description: 'TC-003' });
+    await test.step('Search from products page', async () => {
+      await pages.home.goto('/');
+      await pages.home.dismissAds();
+      // page methods only — no locators here
+    });
+    await test.step('Compare with API', async () => {
+      const result = await api.product.search('top');
+      expect(result.httpStatus).toBe(200);
+      expect(result.responseCode).toBe(200);
+    });
+  });
+});
+```
+
+## Definition of Done
+
+- [ ] Manual case file + README row + spec path
+- [ ] Gaps filled in POM/API/fixtures/data; live-verified locators
+- [ ] Spec: fixtures import, tags, TC annotation, steps, 2+ assertions
+- [ ] `--repeat-each=3` on chromium green (or `fixme` with reason)
+- [ ] lint + typecheck clean
+- [ ] `ai-review-log.md` updated if the agent guessed wrong
+
+## Anti-patterns
+
+| Do not | Do instead |
+| --- | --- |
+| Selectors in spec | Page object method |
+| `waitForTimeout` | Web-first `expect` |
+| `any` / `console.log` | Types + `logger` (redact secrets) |
+| Invent locators/endpoints | Live verify |
+| Weakened assertion to go green | Fix the root cause |
+| Shared static user | Faker + API create/delete |
+| `page.goto(full url)` | `BasePage.goto(relative)` |
+| Throw in fixture teardown | Log, swallow, still attempt delete |

@@ -1,0 +1,26 @@
+---
+description: When a manual test case is pasted or described, normalise it, generate framework code, run, and update docs. Always apply.
+alwaysApply: true
+---
+
+# Intake workflow (paste a case → green spec)
+
+Follow this whenever the user pastes or describes a manual test case (any format, even rough). Do not ask where files go. Process several cases **one at a time**.
+
+Read and obey `.cursor/rules/framework-rules.mdc` and `.cursor/rules/manual-testcase-template.mdc`. After generation, apply `.cursor/rules/review-checklist.mdc`.
+
+## Steps (do all of them)
+
+1. **Normalise and save the case.** Use the template. Path: `docs/manual-test-cases/TC-NNN-<kebab-title>.md` where NNN is the next free number (`TC-001` if none exist). Set `Status: Ready`. If something is ambiguous, make a reasonable assumption, **state it**, and continue. Ask only if truly blocked (missing credential that cannot be generated, unknown product that the live site does not have).
+2. **Classify** as UI, API, or Hybrid. Spec lives in `tests/ui/`, `tests/api/`, or `tests/hybrid/` respectively. One TC per spec file.
+3. **Inventory** existing page objects, API methods, fixtures, factories, utils, and constants. List gaps before writing code.
+4. **Verify on the live site** any locator, message text, URL path, or endpoint you do not already have in the repo. Use Playwright codegen, the browser tool, or a documented API call. **Never invent.**
+5. **Close gaps** in pages, API clients, fixtures, data factories, and utils. Follow framework-rules. Do not put selectors or URLs in specs.
+6. **Write the spec.** Import `test, expect` from `src/fixtures`. Title: `'Type | Description | TC-NNN'`. Tags via `{ tag: [...] }`. `test.step` per manual step group. `expect` per expected result. At least two meaningful assertions.
+7. **Run, then quality gates.** `npx playwright test <spec> --project=chromium --repeat-each=3`. Fix root causes; never weaken assertions. Then `npm run lint` and `npm run typecheck`. If flaky after honest investigation, `test.fixme` with a reason — do not hide it.
+8. **Update docs.** Case file: `Automated: Yes`, `Spec:` path. Traceability row in `docs/manual-test-cases/README.md`. Append mistakes and fixes to `docs/ai-review-log.md`.
+9. **Reply** with a short summary: files created/changed, assumptions, test results (`n` passed / `n` failed, repeat-each=3).
+
+## Out of scope
+
+Do not start this workflow for unrelated questions (how to run tests, config tweaks) unless a case is being added or changed.
