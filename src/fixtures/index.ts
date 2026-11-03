@@ -27,6 +27,8 @@ type Fixtures = {
 };
 
 const AD_HOSTS = /(googlesyndication|doubleclick|googletagservices|google-analytics|adservice\.google|pagead)/;
+/** Tests never assert on images, fonts or media; skipping them makes the slow site much faster. */
+const BLOCKED_RESOURCE_TYPES = new Set(['image', 'font', 'media']);
 
 function buildPages(page: Page): PageObjects {
   return {
@@ -40,10 +42,51 @@ function buildPages(page: Page): PageObjects {
   };
 }
 
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Creates the account, tolerating a slow or flaky server. createAccount is not idempotent, so after a
+ * timeout or 5xx we first check (read-only) whether the account was created before trying again.
+ */
+async function createAccountSafely(api: Apis, user: UserData): Promise<void> {
+  const maxAttempts = 3;
+  let lastProblem = 'unknown';
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const created = await api.users.create(user);
+      if (created.responseCode === RESPONSE_CODE.created) return;
+      lastProblem = `createAccount returned ${created.responseCode} ${created.message ?? ''}`.trim();
+      if (created.httpStatus < 500 && created.responseCode !== created.httpStatus) {
+        // A real business error (for example 400), not a server problem: do not retry.
+        throw new Error(`Setup failed: ${lastProblem}`);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Setup failed')) throw error;
+      lastProblem = String(error);
+    }
+    try {
+      const exists = await api.users.verifyLogin(user.email, user.password);
+      if (exists.responseCode === RESPONSE_CODE.ok) return;
+    } catch (error) {
+      lastProblem = `${lastProblem}; verify failed: ${String(error)}`;
+    }
+    logger.warn(`createAccount attempt ${attempt} failed, retrying`, { problem: lastProblem });
+    await sleep(1000 * attempt);
+  }
+  throw new Error(`Setup failed after ${maxAttempts} attempts: ${lastProblem}`);
+}
+
 export const test = base.extend<Fixtures>({
-  // Block third-party ad requests so overlays do not intercept clicks.
+  // Block ads and heavy static resources so overlays do not intercept clicks and pages load fast.
   page: async ({ page }, use) => {
-    await page.route(AD_HOSTS, (route) => route.abort());
+    await page.route('**/*', async (route) => {
+      const request = route.request();
+      if (BLOCKED_RESOURCE_TYPES.has(request.resourceType()) || AD_HOSTS.test(request.url())) {
+        await route.abort();
+        return;
+      }
+      await route.continue();
+    });
     await use(page);
   },
 
@@ -59,10 +102,7 @@ export const test = base.extend<Fixtures>({
   /** Account created through the API; always deleted afterwards (teardown never throws). */
   registeredUser: async ({ api }, use) => {
     const user = buildUser();
-    const created = await api.users.create(user);
-    if (created.responseCode !== RESPONSE_CODE.created) {
-      throw new Error(`Setup failed: createAccount returned ${created.responseCode} ${created.message ?? ''}`);
-    }
+    await createAccountSafely(api, user);
     await use(user);
     try {
       const deleted = await api.users.delete(user.email, user.password);
