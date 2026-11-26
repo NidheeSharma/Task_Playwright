@@ -1,9 +1,23 @@
-# AutomationExercise Playwright Framework
+# Playwright Automation Framework with TypeScript
 
-A Playwright + TypeScript automation framework covering **UI, API, and Hybrid Testing**, with AI-assisted test generation using Cursor.
+A scalable and reusable Playwright Automation Framework built using TypeScript, covering UI Automation, API Testing, and Hybrid Testing.
+This repository demonstrates an end-to-end test automation architecture using:
+Playwright with TypeScript
+Page Object Model (POM)
+Custom Fixtures and reusable components
+UI, API and Hybrid Automation
+Data-driven testing using Faker
+Multi-environment configuration (Dev, QA, Prod)
+Cross-browser testing (Chromium, Firefox, WebKit)
+Parallel execution
+Playwright HTML and Allure Reporting
+Cursor AI-assisted test case generation and code review
 
 **Application Under Test:** [AutomationExercise](https://www.automationexercise.com/)
 
+**Author:** Nidhee Sharma
+
+**Repository:** Task_Playwright
 ---
 
 ## 1. Project Overview
