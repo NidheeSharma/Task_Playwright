@@ -280,6 +280,7 @@ Open a trace:
 ```bash
 npx playwright show-trace "test-results/<test-folder>/trace.zip"
 ```
+<img width="1026" height="866" alt="image" src="https://github.com/user-attachments/assets/d5323aed-249b-4753-9b79-092a1bf924b0" />
 
 ### 8.2 Allure Report Integration
 
